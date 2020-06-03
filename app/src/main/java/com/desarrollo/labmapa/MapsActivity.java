@@ -367,8 +367,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                        } else {
 
                            Log.d(TAG,"--------------------------------");
-                           Log.d("GA",String.valueOf(location.getLatitude()));
-                           Log.d("GA",String.valueOf(location.getLongitude()));
+                           Log.d(TAG,String.valueOf(location.getLatitude()));
+                           Log.d(TAG,String.valueOf(location.getLongitude()));
                            casa = new LatLng(location.getLatitude(),location.getLongitude());
                        }
                    }
