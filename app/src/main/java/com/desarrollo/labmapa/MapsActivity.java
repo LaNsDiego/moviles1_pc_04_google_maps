@@ -55,7 +55,7 @@ import java.util.Locale;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
-    private static final String TAG = "Estilo del mapa";
+    private static final String TAG = "MapsActivity";
     private static final int REQUEST_LOCATION_PERMISSION = 1;
     private GoogleMap mMap;
     private LatLng casa;

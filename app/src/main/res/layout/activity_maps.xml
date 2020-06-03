@@ -9,7 +9,7 @@
         android:id="@+id/btn_calculate_distance"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Calcular distancias"/>
+        android:text="@string/calcular_distancias"/>
     <Spinner
         android:id="@+id/spinner_map_theme"
         android:layout_width="match_parent"
