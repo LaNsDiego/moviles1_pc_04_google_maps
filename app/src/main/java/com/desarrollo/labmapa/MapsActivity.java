@@ -121,21 +121,22 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 locationJapan.setLongitude(139.769051);
                 distance = crntLocation.distanceTo(locationJapan) / 1000; // in km
                 resultMessage += String.valueOf("Distancia a Japon \n "+distance +"Km \n\n");
+
                 Location locationAlemania = new Location("Alemania");
-                locationJapan.setLatitude(35.680513);
-                locationJapan.setLongitude(139.769051);
+                locationJapan.setLatitude(52.516934);
+                locationJapan.setLongitude(13.403190);
                 distance = crntLocation.distanceTo(locationAlemania) / 1000; // in km
                 resultMessage += String.valueOf("Distancia a Alemania \n "+distance +"Km \n\n");
 
                 Location locationItalia = new Location("Italia");
-                locationJapan.setLatitude(35.680513);
-                locationJapan.setLongitude(139.769051);
+                locationJapan.setLatitude(41.902609);
+                locationJapan.setLongitude(12.494847);
                 distance = crntLocation.distanceTo(locationItalia) / 1000; // in km
                 resultMessage += String.valueOf("Distancia a Italia \n "+distance +"Km \n\n");
 
                 Location locationFrancia = new Location("Francia");
-                locationJapan.setLatitude(35.680513);
-                locationJapan.setLongitude(139.769051);
+                locationJapan.setLatitude(48.843489);
+                locationJapan.setLongitude(2.355331);
                 distance = crntLocation.distanceTo(locationFrancia) / 1000; // in km
                 resultMessage += String.valueOf("Distancia a Francia \n "+distance +"Km");
 
