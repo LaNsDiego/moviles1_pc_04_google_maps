@@ -1,20 +1,38 @@
 package com.desarrollo.labmapa;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.Spinner;
+import android.widget.Toast;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -28,7 +46,11 @@ import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PointOfInterest;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -36,9 +58,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final String TAG = "Estilo del mapa";
     private static final int REQUEST_LOCATION_PERMISSION = 1;
     private GoogleMap mMap;
-
     private LatLng casa;
+    private String strLatitude , strLongitude;
     private float zoom;
+    FusedLocationProviderClient locationMe;
+    private static final String MAP_STYLE_NORMAL ="NORMAL";
+    private static final String MAP_STYLE_HIBRIDO ="HÍBRIDO";
+    private static final String MAP_STYLE_SATELITAL ="SATELITAL";
+    private static final String MAP_STYLE_TERRENO ="TERRENO";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,8 +76,80 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.fragment_container, mapFragment).commit();
         mapFragment.getMapAsync(this);
+         locationMe = LocationServices.getFusedLocationProviderClient(this);
+
         casa = new LatLng(-18.007741, -70.244397);
         zoom = 15;
+
+        // spiner
+        List<String> lstStyle = new ArrayList<>();
+        lstStyle.add(MAP_STYLE_NORMAL);
+        lstStyle.add(MAP_STYLE_HIBRIDO);
+        lstStyle.add(MAP_STYLE_SATELITAL);
+        lstStyle.add(MAP_STYLE_TERRENO);
+
+        ArrayAdapter<String> adapterSpinnerMapStyle = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item,lstStyle);
+        final Spinner spinerMapStyle = findViewById(R.id.spinner_map_theme);
+        spinerMapStyle.setAdapter(adapterSpinnerMapStyle);
+        spinerMapStyle.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                setChangeMapStyle(spinerMapStyle.getSelectedItem().toString());
+                Log.d("MAPP>" , spinerMapStyle.getSelectedItem().toString());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+        //Calcular la distancia de mi ubicación hasta otro punto
+        Button btnCalculateDistance = findViewById(R.id.btn_calculate_distance);
+        btnCalculateDistance.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String resultMessage = "";
+                float distance=0;
+                Location crntLocation=new Location("crntlocation");
+                crntLocation.setLatitude(casa.latitude);
+                crntLocation.setLongitude(casa.longitude);
+
+                Location locationJapan = new Location("japan");
+                locationJapan.setLatitude(35.680513);
+                locationJapan.setLongitude(139.769051);
+                distance = crntLocation.distanceTo(locationJapan) / 1000; // in km
+                resultMessage += String.valueOf("Distancia a Japon \n "+distance +"Km \n\n");
+                Location locationAlemania = new Location("Alemania");
+                locationJapan.setLatitude(35.680513);
+                locationJapan.setLongitude(139.769051);
+                distance = crntLocation.distanceTo(locationAlemania) / 1000; // in km
+                resultMessage += String.valueOf("Distancia a Alemania \n "+distance +"Km \n\n");
+
+                Location locationItalia = new Location("Italia");
+                locationJapan.setLatitude(35.680513);
+                locationJapan.setLongitude(139.769051);
+                distance = crntLocation.distanceTo(locationItalia) / 1000; // in km
+                resultMessage += String.valueOf("Distancia a Italia \n "+distance +"Km \n\n");
+
+                Location locationFrancia = new Location("Francia");
+                locationJapan.setLatitude(35.680513);
+                locationJapan.setLongitude(139.769051);
+                distance = crntLocation.distanceTo(locationFrancia) / 1000; // in km
+                resultMessage += String.valueOf("Distancia a Francia \n "+distance +"Km");
+
+                showDistancaInDialog(resultMessage);
+            }
+        });
+        getLastLocation();
+    }
+
+    private void showDistancaInDialog(String resultMessage){
+        new AlertDialog.Builder(MapsActivity.this)
+                .setTitle("Distancias")
+                .setMessage(resultMessage)
+                .show();
     }
 
     private void setInfoWindowClickToPanorama(GoogleMap map) {
@@ -195,5 +295,93 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 poiMarker.setTag("poi");
             }
         });
+    }
+
+    private void setChangeMapStyle(String typeMapStyle){
+        switch (typeMapStyle){
+            case MAP_STYLE_HIBRIDO:
+                mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+                return;
+            case MAP_STYLE_SATELITAL:
+                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                return;
+            case MAP_STYLE_TERRENO:
+                mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+                return;
+            case MAP_STYLE_NORMAL:
+            default:
+                mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                return;
+        }
+    }
+
+    private boolean isLocationEnabled() {
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
+                LocationManager.NETWORK_PROVIDER
+        );
+    }
+
+    private boolean checkPermissions() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        }
+        return false;
+    }
+
+    private LocationCallback mLocationCallback = new LocationCallback() {
+        @Override
+        public void onLocationResult(LocationResult locationResult) {
+            Location mLastLocation = locationResult.getLastLocation();
+
+        }
+    };
+
+    private void requestNewLocationData(){
+
+        LocationRequest mLocationRequest = new LocationRequest();
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setInterval(0);
+        mLocationRequest.setFastestInterval(0);
+        mLocationRequest.setNumUpdates(1);
+
+        locationMe = LocationServices.getFusedLocationProviderClient(this);
+        locationMe.requestLocationUpdates(
+                mLocationRequest, mLocationCallback,
+                Looper.myLooper()
+        );
+
+    }
+
+//    @SuppressLint("MissingPermission")
+    private void getLastLocation(){
+        if (checkPermissions()) {
+            if (isLocationEnabled()) {
+                locationMe.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
+                   @Override
+                   public void onComplete(@NonNull Task<Location> task) {
+                       Location location = task.getResult();
+                       if (location == null) {
+                           requestNewLocationData();
+                       } else {
+
+                           Log.d(TAG,"--------------------------------");
+                           Log.d("GA",String.valueOf(location.getLatitude()));
+                           Log.d("GA",String.valueOf(location.getLongitude()));
+                           casa = new LatLng(location.getLatitude(),location.getLongitude());
+                       }
+                   }
+                });
+            } else {
+                Toast.makeText(this, "Turn on location", Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivity(intent);
+            }
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]
+                            {Manifest.permission.ACCESS_FINE_LOCATION},
+                    REQUEST_LOCATION_PERMISSION);
+        }
     }
 }
